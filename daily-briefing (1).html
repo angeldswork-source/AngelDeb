@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Briefing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fdf7f9;
+    --grid-line:rgba(232,130,159,0.05);
+    --panel:#ffffff;
+    --panel-2:#fdeef3;
+    --line:#f4dce4;
+    --line-bright:#eab9cb;
+    --pink:#e8829f;
+    --pink-bright:#f0a5bb;
+    --lav:#c9a3d4;
+    --text:#4a3742;
+    --text-dim:#ab8a97;
+    --danger:#d95c78;
+    --danger-dim:#f7d9e1;
+    --low:#c9a3d4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/32px 32px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/32px 32px,
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height:100vh;
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  /* ---- Header ---- */
+  .header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:22px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:14px;
+    position:relative;
+  }
+  .header::after{
+    content:"";
+    position:absolute;
+    left:0; bottom:-1px;
+    width:110px; height:2px;
+    border-radius:2px;
+    background:var(--pink);
+  }
+  .header .tag{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.14em;
+    color:var(--pink);
+    margin-bottom:6px;
+  }
+  .header h1{
+    font-size:19px;
+    font-weight:700;
+    letter-spacing:0.01em;
+    margin:0;
+    color:var(--text);
+    min-height:24px;
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  .header h1.fade{
+    opacity:0;
+    transform:translateY(-4px);
+  }
+  .header .date{
+    font-size:12px;
+    letter-spacing:0.06em;
+    color:var(--text-dim);
+    white-space:nowrap;
+    margin-top:2px;
+  }
+
+  .notif-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  #notif-toggle{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px 14px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--text);
+    cursor:pointer;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  #notif-toggle:hover{border-color:var(--pink); color:var(--pink);}
+  #notif-toggle.on{
+    background:var(--pink);
+    border-color:var(--pink);
+    color:#ffffff;
+  }
+  #notif-status{
+    font-size:11px;
+    color:var(--text-dim);
+  }
+
+  /* ---- Quick access / chat toggle ---- */
+  .ai-links{
+    margin-bottom:20px;
+  }
+  .ai-links-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .ai-link{
+    flex:1;
+    min-width:130px;
+    text-align:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:var(--text);
+    text-decoration:none;
+    box-shadow:0 2px 12px rgba(232,130,159,0.08);
+    transition:border-color .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .ai-link:hover{
+    border-color:var(--pink);
+    color:var(--pink);
+    box-shadow:0 2px 16px rgba(232,130,159,0.20);
+  }
+  #claude-toggle{
+    cursor:pointer;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  #claude-toggle.active{
+    border-color:var(--pink);
+    color:var(--pink);
+    box-shadow:0 2px 16px rgba(232,130,159,0.20);
+  }
+
+  .chat-panel{
+    display:none;
+    background:var(--panel);
+    border:1px solid var(--line-bright);
+    border-radius:18px;
+    margin-bottom:20px;
+    box-shadow:0 2px 18px rgba(232,130,159,0.10);
+    overflow:hidden;
+  }
+  .chat-panel.open{display:block;}
+  .chat-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 16px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.1em;
+    color:var(--pink);
+  }
+  .chat-header button{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    cursor:pointer;
+    font-size:14px;
+    line-height:1;
+  }
+  .chat-header button:hover{color:var(--danger);}
+  .chat-messages{
+    max-height:280px;
+    overflow-y:auto;
+    padding:14px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .chat-msg{
+    max-width:85%;
+    padding:9px 14px;
+    font-size:13px;
+    line-height:1.45;
+    border-radius:14px;
+    white-space:pre-wrap;
+  }
+  .chat-msg.assistant{
+    align-self:flex-start;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    border-bottom-left-radius:4px;
+  }
+  .chat-msg.user{
+    align-self:flex-end;
+    background:var(--pink);
+    color:#ffffff;
+    border-bottom-right-radius:4px;
+  }
+  .chat-msg.thinking{
+    align-self:flex-start;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    font-style:italic;
+    border-bottom-left-radius:4px;
+  }
+  .chat-input-row{
+    display:flex;
+    gap:8px;
+    padding:12px 16px;
+    border-top:1px solid var(--line);
+  }
+  .chat-input-row input{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    padding:9px 14px;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size:13px;
+  }
+  .chat-input-row input:focus{
+    outline:none;
+    border-color:var(--pink);
+    box-shadow:0 0 0 3px rgba(232,130,159,0.15);
+  }
+  .chat-input-row button{
+    background:var(--pink);
+    color:#ffffff;
+    border:none;
+    border-radius:12px;
+    padding:9px 18px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    cursor:pointer;
+  }
+  .chat-input-row button:hover{background:var(--pink-bright);}
+  .chat-input-row button:disabled{opacity:0.5; cursor:default;}
+
+  /* ---- Split-flap board ---- */
+  .board{
+    background:var(--panel);
+    border:1px solid var(--line-bright);
+    border-radius:20px;
+    padding:22px;
+    margin-bottom:20px;
+    box-shadow:0 4px 20px rgba(232,130,159,0.12);
+    position:relative;
+  }
+  .flap-row{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:14px;
+  }
+  .flap{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 10px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .flap::after{
+    content:"";
+    position:absolute;
+    left:14px;right:14px;top:50%;
+    height:1px;
+    background:rgba(0,0,0,0.05);
+  }
+  .flap .num{
+    font-size:36px;
+    font-weight:700;
+    line-height:1;
+    display:block;
+    font-variant-numeric:tabular-nums;
+    transition:opacity .15s ease;
+  }
+  .flap.overdue .num{color:var(--danger);}
+  .flap.today .num{color:var(--pink);}
+  .flap.upcoming .num{color:var(--lav);}
+  .flap .label{
+    font-size:10px;
+    letter-spacing:0.14em;
+    color:var(--text-dim);
+    margin-top:6px;
+    display:block;
+  }
+  .flap.flash .num{animation:flip .32s ease;}
+  @keyframes flip{
+    0%{opacity:0.15; transform:translateY(-3px);}
+    100%{opacity:1; transform:translateY(0);}
+  }
+
+  .briefing-line{
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+    font-size:14px;
+    line-height:1.5;
+    color:var(--text-dim);
+  }
+  .briefing-line strong{color:var(--pink); font-weight:600;}
+
+  /* ---- Add task ---- */
+  .add-form{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:20px;
+    box-shadow:0 2px 14px rgba(232,130,159,0.08);
+  }
+  .add-form .row1{
+    display:flex;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .add-form input[type="text"]{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    padding:10px 14px;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size:14px;
+  }
+  .add-form input[type="text"]:focus,
+  .add-form input[type="date"]:focus,
+  .add-form select:focus{
+    outline:none;
+    border-color:var(--pink);
+    box-shadow:0 0 0 3px rgba(232,130,159,0.15);
+  }
+  .row2{display:flex; gap:8px; flex-wrap:wrap;}
+  .add-form input[type="date"], .add-form select{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    padding:9px 12px;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size:13px;
+  }
+  .add-form button{
+    background:var(--pink);
+    color:#ffffff;
+    border:none;
+    border-radius:12px;
+    padding:9px 20px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    cursor:pointer;
+    margin-left:auto;
+    transition:background .15s ease;
+  }
+  .add-form button:hover{background:var(--pink-bright);}
+
+  /* ---- Manifest / task list ---- */
+  .manifest-head{
+    display:grid;
+    grid-template-columns:1fr 90px 100px 70px;
+    gap:10px;
+    padding:0 16px 8px;
+    font-size:10px;
+    letter-spacing:0.12em;
+    color:var(--text-dim);
+  }
+  .task{
+    display:grid;
+    grid-template-columns:1fr 90px 100px 70px;
+    gap:10px;
+    align-items:center;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:3px solid var(--line);
+    border-radius:14px;
+    padding:13px 16px;
+    margin-bottom:8px;
+    transition:box-shadow .15s ease, border-color .15s ease;
+  }
+  .task:hover{border-color:var(--line-bright); box-shadow:0 2px 12px rgba(232,130,159,0.12);}
+  .task.p-high{border-left-color:var(--danger);}
+  .task.p-medium{border-left-color:var(--pink);}
+  .task.p-low{border-left-color:var(--low);}
+  .task.done{opacity:0.45;}
+  .task.done .title{text-decoration:line-through;}
+
+  .task .title{
+    font-size:14px;
+    color:var(--text);
+  }
+  .task .notes{
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:3px;
+  }
+  .task .due{
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+  }
+  .due.is-overdue{color:var(--danger);}
+  .due.is-today{color:var(--pink);}
+  .due.is-future{color:var(--text-dim);}
+  .due.none{color:#d9c2cb;}
+
+  .task .priority-tag{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+  }
+  .p-high .priority-tag{color:var(--danger);}
+  .p-medium .priority-tag{color:var(--pink);}
+  .p-low .priority-tag{color:var(--low);}
+
+  .task .actions{
+    display:flex;
+    gap:6px;
+    justify-content:flex-end;
+  }
+  .task .actions button{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    border-radius:10px;
+    width:26px;
+    height:26px;
+    cursor:pointer;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .task .actions button:hover{border-color:var(--pink); color:var(--pink);}
+  .task .actions button.del:hover{border-color:var(--danger); color:var(--danger);}
+
+  .task.editing{
+    display:block;
+    padding:14px 16px;
+  }
+  .edit-row{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .edit-row input[type="text"],
+  .edit-row input[type="date"],
+  .edit-row select{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text);
+    padding:8px 12px;
+    font-family:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size:13px;
+    width:100%;
+  }
+  .edit-row input:focus, .edit-row select:focus{
+    outline:none;
+    border-color:var(--pink);
+    box-shadow:0 0 0 3px rgba(232,130,159,0.15);
+  }
+  .edit-row2{
+    display:flex;
+    gap:8px;
+  }
+  .edit-row2 input, .edit-row2 select{flex:1;}
+  .edit-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:2px;
+  }
+  .edit-actions button{
+    border:none;
+    border-radius:10px;
+    padding:8px 16px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.05em;
+    cursor:pointer;
+  }
+  .edit-cancel{
+    background:var(--panel-2);
+    color:var(--text-dim);
+  }
+  .edit-cancel:hover{color:var(--text);}
+  .edit-save{
+    background:var(--pink);
+    color:#ffffff;
+  }
+  .edit-save:hover{background:var(--pink-bright);}
+
+  .empty{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--text-dim);
+    font-size:13px;
+    border:1px dashed var(--line);
+    border-radius:16px;
+    letter-spacing:0.04em;
+  }
+
+  .section-label{
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--pink);
+    margin:22px 0 10px;
+  }
+
+  @media (max-width: 520px){
+    .manifest-head{display:none;}
+    .task{grid-template-columns:1fr; gap:6px;}
+    .task .due, .task .priority-tag{display:inline-block; margin-right:10px;}
+    .task .actions{justify-content:flex-start; margin-top:6px;}
+    .flap-row{gap:8px;}
+    .flap .num{font-size:26px;}
+    .header{flex-direction:column; gap:8px;}
+    .ai-links-row{flex-direction:column;}
+    .edit-row2{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <span class="tag">DAILY BRIEFING</span>
+      <h1 id="rotator">Hello, Angel! Here's today's To Do List</h1>
+    </div>
+    <span class="date" id="today-date"></span>
+  </div>
+
+  <div class="notif-bar">
+    <button id="notif-toggle" type="button">🔔 Enable desktop reminders</button>
+    <span id="notif-status"></span>
+  </div>
+
+  <div class="ai-links">
+    <span class="section-label" style="margin:0 0 10px;">QUICK ACCESS</span>
+    <div class="ai-links-row">
+      <button id="claude-toggle" class="ai-link" type="button">Claude (inline)</button>
+      <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer" class="ai-link">ChatGPT</a>
+      <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer" class="ai-link">Gemini</a>
+    </div>
+  </div>
+
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-header">
+      <span>ASK CLAUDE ABOUT TODAY</span>
+      <button id="chat-close" type="button" aria-label="Close chat">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg assistant">Hi Angel — I can see your task list. Ask me to help prioritize, draft something, or think through today.</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask about your tasks…" maxlength="500">
+      <button id="chat-send" type="button">SEND</button>
+    </div>
+  </div>
+
+  <div class="board">
+    <div class="flap-row">
+      <div class="flap overdue"><span class="num" id="count-overdue">0</span><span class="label">OVERDUE</span></div>
+      <div class="flap today"><span class="num" id="count-today">0</span><span class="label">DUE TODAY</span></div>
+      <div class="flap upcoming"><span class="num" id="count-upcoming">0</span><span class="label">NEXT 7 DAYS</span></div>
+    </div>
+    <div class="briefing-line" id="briefing-text">Loading briefing…</div>
+  </div>
+
+  <div class="add-form">
+    <div class="row1">
+      <input type="text" id="input-title" placeholder="New task…" maxlength="120">
+    </div>
+    <div class="row2">
+      <input type="date" id="input-due">
+      <select id="input-priority">
+        <option value="medium">Medium priority</option>
+        <option value="high">High priority</option>
+        <option value="low">Low priority</option>
+      </select>
+      <input type="text" id="input-notes" placeholder="Notes (optional)" style="flex:1; min-width:120px;">
+      <button id="btn-add">ADD TASK</button>
+    </div>
+  </div>
+
+  <div class="section-label">MANIFEST</div>
+  <div class="manifest-head">
+    <span>TASK</span><span>DUE</span><span>PRIORITY</span><span></span>
+  </div>
+  <div id="task-list"></div>
+</div>
+
+<script>
+let tasks = [];
+let loaded = false;
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function fmtHeaderDate(){
+  const d = new Date();
+  const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+  return d.toLocaleDateString('en-US', opts).toUpperCase();
+}
+
+function dueClass(due){
+  if(!due) return 'none';
+  if(due < todayStr()) return 'is-overdue';
+  if(due === todayStr()) return 'is-today';
+  return 'is-future';
+}
+
+function fmtDue(due){
+  if(!due) return '—';
+  const d = new Date(due + 'T00:00:00');
+  const t = todayStr();
+  if(due === t) return 'TODAY';
+  const opts = { month:'short', day:'numeric' };
+  return d.toLocaleDateString('en-US', opts).toUpperCase();
+}
+
+const prioRank = { high:0, medium:1, low:2 };
+
+function sortTasks(list){
+  return [...list].sort((a,b) => {
+    if(a.completed !== b.completed) return a.completed ? 1 : -1;
+    const t = todayStr();
+    const aOver = a.due && a.due < t, bOver = b.due && b.due < t;
+    if(aOver !== bOver) return aOver ? -1 : 1;
+    const aToday = a.due === t, bToday = b.due === t;
+    if(aToday !== bToday) return aToday ? -1 : 1;
+    if(a.due && b.due && a.due !== b.due) return a.due < b.due ? -1 : 1;
+    if(!!a.due !== !!b.due) return a.due ? -1 : 1;
+    if(prioRank[a.priority] !== prioRank[b.priority]) return prioRank[a.priority] - prioRank[b.priority];
+    return b.createdAt - a.createdAt;
+  });
+}
+
+function computeBriefing(){
+  const t = todayStr();
+  const in7 = new Date(); in7.setDate(in7.getDate() + 7);
+  const in7str = in7.getFullYear() + '-' + String(in7.getMonth()+1).padStart(2,'0') + '-' + String(in7.getDate()).padStart(2,'0');
+
+  const active = tasks.filter(x => !x.completed);
+  const overdue = active.filter(x => x.due && x.due < t);
+  const dueToday = active.filter(x => x.due === t);
+  const upcoming = active.filter(x => x.due && x.due > t && x.due <= in7str);
+  const highPriorityActive = active.filter(x => x.priority === 'high');
+
+  animateCount('count-overdue', overdue.length);
+  animateCount('count-today', dueToday.length);
+  animateCount('count-upcoming', upcoming.length);
+
+  const briefEl = document.getElementById('briefing-text');
+  if(active.length === 0){
+    briefEl.innerHTML = "Nothing on the manifest. Add a task below to get started.";
+    return;
+  }
+  let parts = [];
+  if(overdue.length) parts.push(`<strong>${overdue.length} overdue</strong>`);
+  if(dueToday.length) parts.push(`<strong>${dueToday.length} due today</strong>`);
+  if(highPriorityActive.length) parts.push(`<strong>${highPriorityActive.length} high priority</strong> open`);
+
+  if(parts.length === 0){
+    briefEl.innerHTML = `${active.length} open task${active.length===1?'':'s'}, nothing urgent — next up: <strong>${upcoming[0] ? upcoming[0].title : active[0].title}</strong>.`;
+  } else {
+    briefEl.innerHTML = parts.join(', ') + '. ' + (overdue.length ? 'Clear those first.' : 'Stay on top of today\'s list.');
+  }
+}
+
+function animateCount(id, val){
+  const el = document.getElementById(id);
+  if(el.textContent !== String(val)){
+    el.parentElement.classList.remove('flash');
+    void el.parentElement.offsetWidth;
+    el.parentElement.classList.add('flash');
+  }
+  el.textContent = val;
+}
+
+let editingTaskId = null;
+
+function render(){
+  computeBriefing();
+  const listEl = document.getElementById('task-list');
+  const sorted = sortTasks(tasks);
+  if(sorted.length === 0){
+    listEl.innerHTML = '<div class="empty">No tasks yet. The manifest is empty.</div>';
+    return;
+  }
+  listEl.innerHTML = sorted.map(task => {
+    if(task.id === editingTaskId){
+      return `
+    <div class="task editing" data-id="${task.id}">
+      <div class="edit-row">
+        <input type="text" class="edit-title" value="${escapeHtml(task.title)}" maxlength="120">
+        <div class="edit-row2">
+          <input type="date" class="edit-due" value="${task.due || ''}">
+          <select class="edit-priority">
+            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>High priority</option>
+            <option value="medium" ${task.priority === 'medium' ? 'selected' : ''}>Medium priority</option>
+            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Low priority</option>
+          </select>
+        </div>
+        <input type="text" class="edit-notes" value="${escapeHtml(task.notes || '')}" placeholder="Notes (optional)">
+        <div class="edit-actions">
+          <button class="edit-cancel" type="button">CANCEL</button>
+          <button class="edit-save" type="button">SAVE</button>
+        </div>
+      </div>
+    </div>
+      `;
+    }
+    return `
+    <div class="task p-${task.priority} ${task.completed ? 'done' : ''}" data-id="${task.id}">
+      <div>
+        <div class="title">${escapeHtml(task.title)}</div>
+        ${task.notes ? `<div class="notes">${escapeHtml(task.notes)}</div>` : ''}
+      </div>
+      <div class="due ${dueClass(task.due)}">${fmtDue(task.due)}</div>
+      <div class="priority-tag">${task.priority}</div>
+      <div class="actions">
+        <button class="edit" title="Edit">✎</button>
+        <button class="toggle" title="${task.completed ? 'Mark active' : 'Mark done'}">${task.completed ? '↺' : '✓'}</button>
+        <button class="del" title="Delete">✕</button>
+      </div>
+    </div>
+  `;
+  }).join('');
+
+  listEl.querySelectorAll('.edit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      editingTaskId = e.target.closest('.task').dataset.id;
+      render();
+    });
+  });
+  listEl.querySelectorAll('.edit-cancel').forEach(btn => {
+    btn.addEventListener('click', () => {
+      editingTaskId = null;
+      render();
+    });
+  });
+  listEl.querySelectorAll('.edit-save').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const row = e.target.closest('.task');
+      const id = row.dataset.id;
+      const task = tasks.find(x => x.id === id);
+      const newTitle = row.querySelector('.edit-title').value.trim();
+      if(!newTitle){
+        row.querySelector('.edit-title').focus();
+        return;
+      }
+      task.title = newTitle;
+      task.due = row.querySelector('.edit-due').value || null;
+      task.priority = row.querySelector('.edit-priority').value;
+      task.notes = row.querySelector('.edit-notes').value.trim();
+      editingTaskId = null;
+      saveTasks();
+      render();
+    });
+  });
+  listEl.querySelectorAll('.toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('.task').dataset.id;
+      const task = tasks.find(x => x.id === id);
+      task.completed = !task.completed;
+      saveTasks();
+      render();
+    });
+  });
+  listEl.querySelectorAll('.del').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.closest('.task').dataset.id;
+      if(editingTaskId === id) editingTaskId = null;
+      tasks = tasks.filter(x => x.id !== id);
+      saveTasks();
+      render();
+    });
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+
+async function saveTasks(){
+  try{
+    localStorage.setItem('angel-daily-briefing-tasks', JSON.stringify(tasks));
+  }catch(err){
+    console.error('Storage error:', err);
+  }
+  if(typeof checkReminders === 'function') checkReminders();
+}
+
+async function loadTasks(){
+  try{
+    const raw = localStorage.getItem('angel-daily-briefing-tasks');
+    if(raw){
+      tasks = JSON.parse(raw);
+    }
+  }catch(err){
+    tasks = [];
+  }
+  loaded = true;
+  render();
+  if(typeof checkReminders === 'function') checkReminders();
+}
+
+document.getElementById('btn-add').addEventListener('click', addTask);
+document.getElementById('input-title').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') addTask();
+});
+
+function addTask(){
+  const titleEl = document.getElementById('input-title');
+  const title = titleEl.value.trim();
+  if(!title) return;
+  const due = document.getElementById('input-due').value || null;
+  const priority = document.getElementById('input-priority').value;
+  const notes = document.getElementById('input-notes').value.trim();
+
+  tasks.push({
+    id: 'task_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    title, due, priority, notes,
+    completed: false,
+    createdAt: Date.now()
+  });
+
+  titleEl.value = '';
+  document.getElementById('input-due').value = '';
+  document.getElementById('input-notes').value = '';
+  document.getElementById('input-priority').value = 'medium';
+
+  saveTasks();
+  render();
+}
+
+document.getElementById('today-date').textContent = fmtHeaderDate();
+loadTasks();
+
+// ---- Desktop reminders ----
+const notifToggleBtn = document.getElementById('notif-toggle');
+const notifStatusEl = document.getElementById('notif-status');
+const NOTIF_PREF_KEY = 'angel-daily-briefing-notif-enabled';
+const NOTIF_LOG_KEY = 'angel-daily-briefing-notified';
+
+function notifSupported(){
+  return 'Notification' in window;
+}
+
+function updateNotifButton(){
+  if(!notifSupported()){
+    notifToggleBtn.textContent = 'Reminders not supported';
+    notifToggleBtn.disabled = true;
+    return;
+  }
+  const enabled = localStorage.getItem(NOTIF_PREF_KEY) === 'true' && Notification.permission === 'granted';
+  if(enabled){
+    notifToggleBtn.textContent = '🔔 Reminders on';
+    notifToggleBtn.classList.add('on');
+    notifStatusEl.textContent = 'Keep this tab open to receive them.';
+  }else if(Notification.permission === 'denied'){
+    notifToggleBtn.textContent = '🔕 Reminders blocked';
+    notifToggleBtn.classList.remove('on');
+    notifStatusEl.textContent = 'Allow notifications for this site in your browser settings.';
+  }else{
+    notifToggleBtn.textContent = '🔔 Enable desktop reminders';
+    notifToggleBtn.classList.remove('on');
+    notifStatusEl.textContent = '';
+  }
+}
+
+notifToggleBtn.addEventListener('click', async () => {
+  if(!notifSupported()) return;
+  const currentlyEnabled = localStorage.getItem(NOTIF_PREF_KEY) === 'true' && Notification.permission === 'granted';
+  if(currentlyEnabled){
+    localStorage.setItem(NOTIF_PREF_KEY, 'false');
+    updateNotifButton();
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted'){
+    localStorage.setItem(NOTIF_PREF_KEY, 'true');
+    checkReminders();
+  }
+  updateNotifButton();
+});
+
+function getNotifLog(){
+  const t = todayStr();
+  try{
+    const raw = JSON.parse(localStorage.getItem(NOTIF_LOG_KEY) || '{}');
+    if(raw.date === t) return raw;
+  }catch(err){}
+  return { date: t, ids: [] };
+}
+
+function checkReminders(){
+  if(!notifSupported()) return;
+  if(localStorage.getItem(NOTIF_PREF_KEY) !== 'true') return;
+  if(Notification.permission !== 'granted') return;
+
+  const t = todayStr();
+  const log = getNotifLog();
+  const due = tasks.filter(x => !x.completed && x.due && x.due <= t && !log.ids.includes(x.id));
+
+  due.forEach(task => {
+    const status = task.due < t ? 'Overdue' : 'Due today';
+    new Notification(`${status}: ${task.title}`, {
+      body: task.notes || 'Open your Daily Briefing to review.',
+      tag: task.id
+    });
+    log.ids.push(task.id);
+  });
+
+  if(due.length){
+    localStorage.setItem(NOTIF_LOG_KEY, JSON.stringify(log));
+  }
+}
+
+updateNotifButton();
+setInterval(checkReminders, 5 * 60 * 1000);
+setInterval(updateNotifButton, 60 * 1000);
+
+// ---- Rotating header greeting ----
+const rotatorMessages = [
+  "Hello, Angel! Here's today's To Do List",
+  "Let's give our best",
+  "Let me know how to help you"
+];
+let rotatorIndex = 0;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function rotateText(){
+  const el = document.getElementById('rotator');
+  if(prefersReducedMotion){
+    rotatorIndex = (rotatorIndex + 1) % rotatorMessages.length;
+    el.textContent = rotatorMessages[rotatorIndex];
+    return;
+  }
+  el.classList.add('fade');
+  setTimeout(() => {
+    rotatorIndex = (rotatorIndex + 1) % rotatorMessages.length;
+    el.textContent = rotatorMessages[rotatorIndex];
+    el.classList.remove('fade');
+  }, 400);
+}
+
+setInterval(rotateText, 3800);
+
+// ---- Inline Claude chat ----
+const chatPanel = document.getElementById('chat-panel');
+const chatToggleBtn = document.getElementById('claude-toggle');
+const chatMessagesEl = document.getElementById('chat-messages');
+const chatInputEl = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send');
+let chatHistory = [];
+
+chatToggleBtn.addEventListener('click', () => {
+  const isOpen = chatPanel.classList.toggle('open');
+  chatToggleBtn.classList.toggle('active', isOpen);
+  if(isOpen) chatInputEl.focus();
+});
+document.getElementById('chat-close').addEventListener('click', () => {
+  chatPanel.classList.remove('open');
+  chatToggleBtn.classList.remove('active');
+});
+
+function taskContext(){
+  const active = tasks.filter(t => !t.completed);
+  if(active.length === 0) return "Angel's task list is currently empty.";
+  const lines = active.map(t => {
+    const dueBit = t.due ? ` (due ${t.due})` : '';
+    return `- ${t.title}${dueBit} [${t.priority} priority]${t.notes ? ' — ' + t.notes : ''}`;
+  });
+  return "Angel's current open tasks:\n" + lines.join('\n');
+}
+
+function appendMessage(role, text){
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.textContent = text;
+  chatMessagesEl.appendChild(div);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+  return div;
+}
+
+async function sendChatMessage(){
+  const text = chatInputEl.value.trim();
+  if(!text) return;
+  appendMessage('user', text);
+  chatHistory.push({ role: 'user', content: text });
+  chatInputEl.value = '';
+  chatInputEl.disabled = true;
+  chatSendBtn.disabled = true;
+  const thinkingEl = appendMessage('thinking', 'Thinking…');
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: "You are a concise, friendly assistant embedded in Angel's personal daily task tracker at a travel company. Help prioritize tasks, draft quick messages, and think through the day. Keep replies short and practical.\n\n" + taskContext(),
+        messages: chatHistory
+      })
+    });
+    const data = await response.json();
+    const replyText = (data.content || [])
+      .filter(block => block.type === 'text')
+      .map(block => block.text)
+      .join('\n')
+      .trim() || "Sorry, I didn't get a response back — try again.";
+    thinkingEl.remove();
+    appendMessage('assistant', replyText);
+    chatHistory.push({ role: 'assistant', content: replyText });
+  }catch(err){
+    thinkingEl.remove();
+    appendMessage('assistant', "Something went wrong reaching Claude. Please try again.");
+    console.error('Chat error:', err);
+  }finally{
+    chatInputEl.disabled = false;
+    chatSendBtn.disabled = false;
+    chatInputEl.focus();
+  }
+}
+
+chatSendBtn.addEventListener('click', sendChatMessage);
+chatInputEl.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') sendChatMessage();
+});
+</script>
+</body>
+</html>
